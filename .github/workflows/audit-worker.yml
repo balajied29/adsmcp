@@ -1,0 +1,46 @@
+# Daily audit worker — runs the AdPilot audit agent for every managed account.
+# Enable: repo Settings → Secrets and variables → Actions →
+#   Variables: AUDIT_WORKER_ENABLED = true
+#   Secrets:   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TOKEN_ENCRYPTION_KEY,
+#              ANTHROPIC_API_KEY, RESEND_API_KEY (optional), DIGEST_FROM_EMAIL (optional)
+name: Daily audit worker
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 06:00 UTC daily
+  workflow_dispatch: {} # manual runs for testing
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    if: ${{ vars.AUDIT_WORKER_ENABLED == 'true' }}
+    defaults:
+      run:
+        working-directory: adpilot
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: adpilot/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: |
+          npm run build -w packages/meta-client
+          npm run build -w apps/worker
+
+      - name: Run audit
+        run: node apps/worker/dist/index.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DIGEST_FROM_EMAIL: ${{ secrets.DIGEST_FROM_EMAIL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.APP_URL }}
