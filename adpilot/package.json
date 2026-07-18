@@ -1,0 +1,17 @@
+{
+  "name": "adpilot",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/meta-client && npm run build -w apps/worker && npm run build -w apps/web",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:worker": "npm run dev -w apps/worker"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
