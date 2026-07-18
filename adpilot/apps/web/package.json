@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "vercel-build": "npm --prefix ../.. run build -w packages/meta-client && next build"
+    "vercel-build": "(cd ../.. && npm run build -w packages/meta-client) && next build"
   },
   "dependencies": {
     "@adpilot/meta-client": "*",
