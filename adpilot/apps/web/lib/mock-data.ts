@@ -27,6 +27,7 @@ export const MOCK_ACCOUNTS = [
     name: "Acme Store — Main",
     currency: "USD",
     status: "ACTIVE",
+    managed: true,
     connection_id: "dev-conn-1",
   },
   {
@@ -35,6 +36,7 @@ export const MOCK_ACCOUNTS = [
     name: "Acme Store — EU",
     currency: "EUR",
     status: "ACTIVE",
+    managed: false,
     connection_id: "dev-conn-1",
   },
 ];

@@ -19,6 +19,113 @@ src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/></noscri
 <!-- End Meta Pixel -->`;
 }
 
+function ShopifyRelayCard({
+  accountRowId,
+  pixels,
+  selectedPixelId,
+}: {
+  accountRowId: string;
+  pixels: Pixel[];
+  selectedPixelId: string;
+}) {
+  const [relay, setRelay] = useState<{ id: string; token: string; pixelId: string } | null>(null);
+  const [secret, setSecret] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const webhookUrl = relay
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/capi/shopify/${relay.token}`
+    : null;
+
+  async function createRelay() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/accounts/${accountRowId}/relays`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pixelId: selectedPixelId,
+          shopifyWebhookSecret: secret || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Failed to create relay");
+      setRelay(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const pixelName = pixels.find((p) => p.id === selectedPixelId)?.name ?? selectedPixelId;
+
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-6">
+      <h2 className="font-semibold">2 · Send your Shopify sales automatically</h2>
+      <p className="mt-2 text-sm leading-6 text-zinc-600">
+        Every Shopify order becomes a server-side <strong>Purchase</strong> event on{" "}
+        <strong>{pixelName}</strong> — with value, currency, hashed customer
+        identifiers, and deduplication against the browser pixel. Tracking that
+        survives ad blockers and iOS.
+      </p>
+
+      {!relay ? (
+        <div className="mt-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-wide text-zinc-500">
+              Shopify webhook secret (optional, recommended)
+            </label>
+            <input
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              placeholder="from Shopify webhook settings"
+              className="mt-1 w-64 rounded-lg border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => void createRelay()}
+            disabled={busy}
+            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+          >
+            {busy ? "Creating…" : "Create relay"}
+          </button>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-xs font-semibold text-emerald-800">
+            Relay ready. In Shopify: Settings → Notifications → Webhooks → Create
+            webhook → Event <strong>Order creation</strong>, format JSON, URL:
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 overflow-x-auto rounded-lg bg-white px-3 py-2 font-mono text-xs">
+              {webhookUrl}
+            </code>
+            <button
+              type="button"
+              onClick={async () => {
+                if (webhookUrl) await navigator.clipboard.writeText(webhookUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-medium text-emerald-700"
+            >
+              {copied ? "✓" : "Copy"}
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-emerald-700">
+            Keep this URL secret — anyone with it can send events to your pixel.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PixelTools({
   accountRowId,
   pixels,
@@ -145,9 +252,12 @@ export function PixelTools({
         </pre>
       </div>
 
+      {/* Shopify relay */}
+      <ShopifyRelayCard accountRowId={accountRowId} pixels={pixels} selectedPixelId={selected.id} />
+
       {/* CAPI */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-6">
-        <h2 className="font-semibold">2 · Verify with the Conversions API</h2>
+        <h2 className="font-semibold">3 · Verify with the Conversions API</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
           The Conversions API sends events server-to-server, so tracking survives ad
           blockers and iOS privacy limits. Fire a test event from AdPilot&apos;s servers

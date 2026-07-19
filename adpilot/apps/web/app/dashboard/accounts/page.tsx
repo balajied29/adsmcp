@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { devMode } from "@/lib/dev";
 import { MOCK_ACCOUNTS, MOCK_CONNECTIONS } from "@/lib/mock-data";
+import { ManagedToggle } from "./managed-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,7 @@ export default async function AccountsPage({
 
     ({ data: accounts } = await supabase
       .from("ad_accounts")
-      .select("id, account_id, name, currency, status, connection_id")
+      .select("id, account_id, name, currency, status, connection_id, managed")
       .order("name"));
   }
 
@@ -96,7 +97,13 @@ export default async function AccountsPage({
                     href={`/dashboard/accounts/${a.id}`}
                     className="block rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-400"
                   >
-                    <p className="font-medium">{a.name}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium">{a.name}</p>
+                      <ManagedToggle
+                        accountRowId={a.id}
+                        initial={Boolean((a as { managed?: boolean }).managed)}
+                      />
+                    </div>
                     <p className="mt-1 text-xs text-zinc-500">
                       {a.account_id} · {a.currency} ·{" "}
                       <span

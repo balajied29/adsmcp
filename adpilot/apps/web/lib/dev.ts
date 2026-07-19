@@ -11,3 +11,5 @@ export const DEV_USER = {
   id: "00000000-0000-0000-0000-00000000dev1",
   email: "dev@adpilot.local",
 };
+
+export const DEV_RELAY_TOKEN = "dev-relay-token";

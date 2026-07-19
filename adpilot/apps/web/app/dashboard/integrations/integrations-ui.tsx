@@ -253,9 +253,131 @@ function SetupGuide() {
   );
 }
 
+/* ---------- Hosted MCP keys ---------- */
+
+interface McpKeyRow {
+  id: string;
+  label: string;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+function McpKeysCard({ initialKeys }: { initialKeys: McpKeyRow[] }) {
+  const [keys, setKeys] = useState(initialKeys);
+  const [freshKey, setFreshKey] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const endpoint =
+    typeof window !== "undefined" ? `${window.location.origin}/api/mcp` : "/api/mcp";
+
+  async function createKey() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/mcp/keys", { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setFreshKey(json.key);
+        setKeys((k) => [
+          ...k.filter((x) => x.id !== json.id),
+          { id: json.id, label: json.label, created_at: new Date().toISOString(), last_used_at: null },
+        ]);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function revoke(id: string) {
+    await fetch(`/api/mcp/keys?id=${id}`, { method: "DELETE" });
+    setKeys((k) => k.filter((x) => x.id !== id));
+    setFreshKey(null);
+  }
+
+  return (
+    <section className="mt-12 rounded-2xl border border-zinc-200 bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight">Hosted connector keys</h2>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            Bearer keys for the hosted MCP endpoint — use AdPilot&apos;s tools from any
+            MCP client without running anything locally.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void createKey()}
+          disabled={busy}
+          className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-50"
+        >
+          {busy ? "Generating…" : "Generate key"}
+        </button>
+      </div>
+
+      {freshKey && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-xs font-semibold text-emerald-800">
+            Copy this key now — it won&apos;t be shown again.
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 overflow-x-auto rounded-lg bg-white px-3 py-2 font-mono text-xs">
+              {freshKey}
+            </code>
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(freshKey);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-medium text-emerald-700"
+            >
+              {copied ? "✓" : "Copy"}
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-emerald-800">Then register it:</p>
+          <pre className="mt-1 overflow-x-auto rounded-lg bg-zinc-900 p-3 text-[11px] leading-5 text-zinc-100">
+            {`claude mcp add adpilot --transport http ${endpoint} \\\n  --header "Authorization: Bearer ${freshKey}"`}
+          </pre>
+        </div>
+      )}
+
+      {keys.length > 0 && (
+        <ul className="mt-4 divide-y divide-zinc-100 text-sm">
+          {keys.map((k) => (
+            <li key={k.id} className="flex items-center justify-between py-2.5">
+              <span>
+                <span className="font-medium">{k.label}</span>
+                <span className="ml-2 text-xs text-zinc-400">
+                  created {new Date(k.created_at).toLocaleDateString()}
+                  {k.last_used_at &&
+                    ` · last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => void revoke(k.id)}
+                className="rounded-lg border border-zinc-200 px-3 py-1 text-xs text-zinc-500 hover:border-red-300 hover:text-red-600"
+              >
+                Revoke
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 /* ---------- Page ---------- */
 
-export function IntegrationsUI({ metaConnected }: { metaConnected: boolean }) {
+export function IntegrationsUI({
+  metaConnected,
+  mcpKeys,
+}: {
+  metaConnected: boolean;
+  mcpKeys: McpKeyRow[];
+}) {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-8">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
@@ -270,6 +392,8 @@ export function IntegrationsUI({ metaConnected }: { metaConnected: boolean }) {
           <ConnectorCard key={c.name} c={c} />
         ))}
       </div>
+
+      <McpKeysCard initialKeys={mcpKeys} />
 
       <SetupGuide />
     </main>

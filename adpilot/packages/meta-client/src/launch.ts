@@ -214,30 +214,56 @@ export class LaunchClient {
 
   /**
    * Send a Conversions API event. With testEventCode set, the event shows in
-   * Events Manager -> Test Events instead of production data.
+   * Events Manager -> Test Events instead of production data. Email/phone are
+   * SHA-256 hashed here (Meta requires hashed identifiers); eventId enables
+   * pixel/CAPI deduplication.
    */
   async sendCapiEvent(
     pixelId: string,
     event: {
       eventName: string;
+      eventId?: string;
+      eventTime?: number;
+      value?: number;
+      currency?: string;
+      email?: string;
+      phone?: string;
       eventSourceUrl?: string;
       testEventCode?: string;
       userData?: Record<string, unknown>;
     },
   ): Promise<{ eventsReceived?: number; fbtraceId?: string }> {
-    const params: Record<string, string> = {
-      data: JSON.stringify([
-        {
-          event_name: event.eventName,
-          event_time: Math.floor(Date.now() / 1000),
-          action_source: "website",
-          event_source_url: event.eventSourceUrl ?? "https://example.com",
-          user_data: event.userData ?? {
-            client_user_agent: "AdPilot-CAPI-Test/1.0",
-          },
-        },
-      ]),
+    const sha256 = async (s: string) => {
+      const data = new TextEncoder().encode(s.trim().toLowerCase());
+      const buf = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(buf))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
     };
+
+    const userData: Record<string, unknown> = {
+      client_user_agent: "AdPilot-CAPI/1.0",
+      ...event.userData,
+    };
+    if (event.email) userData.em = [await sha256(event.email)];
+    if (event.phone) userData.ph = [await sha256(event.phone.replace(/[^0-9]/g, ""))];
+
+    const payload: Record<string, unknown> = {
+      event_name: event.eventName,
+      event_time: event.eventTime ?? Math.floor(Date.now() / 1000),
+      action_source: "website",
+      event_source_url: event.eventSourceUrl ?? "https://example.com",
+      user_data: userData,
+    };
+    if (event.eventId) payload.event_id = event.eventId;
+    if (event.value !== undefined || event.currency) {
+      payload.custom_data = {
+        ...(event.value !== undefined && { value: event.value }),
+        ...(event.currency && { currency: event.currency }),
+      };
+    }
+
+    const params: Record<string, string> = { data: JSON.stringify([payload]) };
     if (event.testEventCode) params.test_event_code = event.testEventCode;
     const res = await this.graph.post<any>(`${pixelId}/events`, params);
     return { eventsReceived: res.events_received, fbtraceId: res.fbtrace_id };

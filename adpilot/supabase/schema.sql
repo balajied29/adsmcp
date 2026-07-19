@@ -124,6 +124,46 @@ create policy "own subscription: select" on public.subscriptions
   for select using (auth.uid() = workspace_id);
 -- No insert/update policies: only the webhook (service role) writes.
 
+-- ============ mcp_keys (hosted MCP connector) ============
+-- Bearer keys for the hosted MCP endpoint. Only the SHA-256 hash is stored;
+-- the plaintext key is shown once at creation.
+create table if not exists public.mcp_keys (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  key_hash text not null unique,
+  label text not null default 'MCP key',
+  created_at timestamptz not null default now(),
+  last_used_at timestamptz
+);
+
+alter table public.mcp_keys enable row level security;
+
+create policy "own mcp keys: select" on public.mcp_keys
+  for select using (auth.uid() = workspace_id);
+create policy "own mcp keys: delete" on public.mcp_keys
+  for delete using (auth.uid() = workspace_id);
+-- Inserts happen via the service role (key-creation route hashes the key).
+
+-- ============ capi_relays (Shopify -> Conversions API) ============
+create table if not exists public.capi_relays (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  ad_account_id uuid not null references public.ad_accounts (id) on delete cascade,
+  pixel_id text not null,
+  relay_token text not null unique,      -- random URL token
+  shopify_webhook_secret text,           -- optional HMAC verification
+  created_at timestamptz not null default now(),
+  last_event_at timestamptz
+);
+
+alter table public.capi_relays enable row level security;
+
+create policy "own relays: select" on public.capi_relays
+  for select using (auth.uid() = workspace_id);
+create policy "own relays: delete" on public.capi_relays
+  for delete using (auth.uid() = workspace_id);
+-- Inserts via the service role (relay-creation route).
+
 -- ============ updated_at trigger ============
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
