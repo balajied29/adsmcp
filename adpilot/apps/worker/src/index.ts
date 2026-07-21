@@ -1,12 +1,12 @@
 /**
- * AdPilot audit worker — run daily on a cron (Railway/Fly scheduled job).
+ * AP/S audit worker — run daily on a cron (Railway/Fly scheduled job).
  *
  *   npm run audit             real mode: every managed account in the DB
  *   npm run audit -- --dry-run  mock account, no DB writes — prints the digest
  *
  * Flow per account: decrypt token → audit agent → insert `recommendations`
- * rows (status: proposed) → digest. Email delivery is a TODO (Resend);
- * the digest currently prints to stdout for cron log capture.
+ * rows (status: proposed) → digest, emailed via Resend when configured
+ * (see email.ts), always printed to stdout for cron log capture.
  */
 import "dotenv/config";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";

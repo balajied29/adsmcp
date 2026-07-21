@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AdPilot",
-  description: "AI media buyer for your Meta ad accounts",
+  title: "AP/S",
+  description: "AI media buyer for your Meta ad accounts, by OnlyBees",
 };
 
 export default function RootLayout({

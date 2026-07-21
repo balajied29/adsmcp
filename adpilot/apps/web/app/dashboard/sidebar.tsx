@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoGlyphA } from "@/app/logo";
 
 function NavItem({
   href,
@@ -61,10 +62,12 @@ export function Sidebar({ dev, email }: { dev: boolean; email: string }) {
     <aside className="sticky top-0 flex h-screen w-60 flex-none flex-col bg-zinc-950 text-zinc-300">
       {/* Logo */}
       <Link href="/dashboard" className="flex items-center gap-2.5 px-4 py-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-sm font-bold text-zinc-900">
-          A
+        <span className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-white text-zinc-900">
+          <LogoGlyphA className="h-4 w-4" />
         </span>
-        <span className="text-lg font-semibold tracking-tight text-white">AdPilot</span>
+        <span className="text-lg font-semibold tracking-tight text-white">
+          AP<span className="text-zinc-500">/</span>S
+        </span>
         {dev && (
           <span className="ml-auto rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">
             DEV

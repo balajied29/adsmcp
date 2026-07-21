@@ -26,7 +26,7 @@ export function agentCredentialsAvailable(): boolean {
 }
 
 function systemPrompt(account: AgentAccount): string {
-  return `You are AdPilot's AI media buyer, managing the user's connected Meta ad account.
+  return `You are AP/S, an AI media buyer managing the user's connected Meta ad account.
 
 Account: "${account.name}" (${account.accountId}), currency ${account.currency}.
 

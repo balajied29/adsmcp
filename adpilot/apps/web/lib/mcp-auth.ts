@@ -6,7 +6,7 @@ import { metaClientForConnection } from "@/lib/meta";
 import { devMode } from "@/lib/dev";
 import { MOCK_ACCOUNTS, createMockMetaClient } from "@/lib/mock-data";
 
-export const DEV_MCP_KEY = "adp_dev_mcp_key";
+export const DEV_MCP_KEY = "aps_dev_mcp_key";
 
 export interface McpContext {
   workspaceId: string;
@@ -19,7 +19,7 @@ export function hashKey(key: string): string {
 }
 
 export function generateKey(): string {
-  return `adp_${crypto.randomBytes(24).toString("hex")}`;
+  return `aps_${crypto.randomBytes(24).toString("hex")}`;
 }
 
 /** Resolve an Authorization: Bearer key to a workspace + Meta client. */

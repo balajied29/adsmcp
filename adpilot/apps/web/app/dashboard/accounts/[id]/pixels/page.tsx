@@ -55,7 +55,7 @@ export default async function PixelsPage({
             >
               Meta Events Manager
             </a>{" "}
-            (Data sources → Connect data → Web), then come back here — AdPilot will pick
+            (Data sources → Connect data → Web), then come back here — AP/S will pick
             it up, give you the install snippet, and let you verify events end to end.
           </p>
         </div>

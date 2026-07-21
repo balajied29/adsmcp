@@ -141,8 +141,8 @@ function SetupGuide() {
     <section className="mt-12">
       <h2 className="text-lg font-bold tracking-tight">30-second setup guide</h2>
       <p className="mt-1 text-sm text-zinc-500">
-        Use your AdPilot connections from any MCP client — Claude does the driving,
-        AdPilot&apos;s guardrails still apply.
+        Use your AP/S connections from any MCP client — Claude does the driving,
+        AP/S&apos;s guardrails still apply.
       </p>
 
       <div className="mt-5 rounded-2xl border border-zinc-200 bg-white">
@@ -172,7 +172,7 @@ function SetupGuide() {
                   <strong>Edit Config</strong>
                 </li>
                 <li>
-                  Add the AdPilot MCP server to{" "}
+                  Add the AP/S MCP server to{" "}
                   <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs">
                     claude_desktop_config.json
                   </code>
@@ -182,7 +182,7 @@ function SetupGuide() {
               <CopyBlock
                 text={`{
   "mcpServers": {
-    "adpilot-meta": {
+    "aps-meta": {
       "command": "node",
       "args": ["/path/to/meta-ads-mcp/dist/index.js"],
       "env": {
@@ -204,7 +204,7 @@ function SetupGuide() {
             <>
               <p>One command — registers the server for every session:</p>
               <CopyBlock
-                text={`claude mcp add adpilot-meta \\
+                text={`claude mcp add aps-meta \\
   --env META_ACCESS_TOKEN=YOUR_LONG_LIVED_TOKEN \\
   --env META_AD_ACCOUNT_ID=act_1234567890 \\
   -- node /path/to/meta-ads-mcp/dist/index.js`}
@@ -227,7 +227,7 @@ function SetupGuide() {
               <CopyBlock
                 text={`{
   "mcpServers": {
-    "adpilot-meta": {
+    "aps-meta": {
       "command": "node",
       "args": ["/path/to/meta-ads-mcp/dist/index.js"],
       "env": {
@@ -306,7 +306,7 @@ function McpKeysCard({ initialKeys }: { initialKeys: McpKeyRow[] }) {
         <div>
           <h2 className="text-lg font-bold tracking-tight">Hosted connector keys</h2>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Bearer keys for the hosted MCP endpoint — use AdPilot&apos;s tools from any
+            Bearer keys for the hosted MCP endpoint — use AP/S&apos;s tools from any
             MCP client without running anything locally.
           </p>
         </div>
@@ -343,7 +343,7 @@ function McpKeysCard({ initialKeys }: { initialKeys: McpKeyRow[] }) {
           </div>
           <p className="mt-3 text-xs text-emerald-800">Then register it:</p>
           <pre className="mt-1 overflow-x-auto rounded-lg bg-zinc-900 p-3 text-[11px] leading-5 text-zinc-100">
-            {`claude mcp add adpilot --transport http ${endpoint} \\\n  --header "Authorization: Bearer ${freshKey}"`}
+            {`claude mcp add aps --transport http ${endpoint} \\\n  --header "Authorization: Bearer ${freshKey}"`}
           </pre>
         </div>
       )}
@@ -390,9 +390,9 @@ export function IntegrationsUI({
     <main className="mx-auto w-full max-w-5xl flex-1 p-8">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight">
-          AdPilot MCP <span className="font-normal text-zinc-400">(Claude Connector)</span>
+          AP/S MCP <span className="font-normal text-zinc-400">(Claude Connector)</span>
         </h1>
-        <p className="text-sm text-zinc-400">Support: support@adpilot.app</p>
+        <p className="text-sm text-zinc-400">Support: support@yourdomain.com</p>
       </header>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

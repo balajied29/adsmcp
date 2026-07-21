@@ -260,7 +260,7 @@ export function PixelTools({
         <h2 className="font-semibold">3 · Verify with the Conversions API</h2>
         <p className="mt-2 text-sm leading-6 text-zinc-600">
           The Conversions API sends events server-to-server, so tracking survives ad
-          blockers and iOS privacy limits. Fire a test event from AdPilot&apos;s servers
+          blockers and iOS privacy limits. Fire a test event from AP/S&apos;s servers
           to confirm the pipe works. To watch it arrive live, open Events Manager →
           your pixel → <strong>Test Events</strong>, copy the code shown (like{" "}
           <code className="rounded bg-zinc-100 px-1">TEST12345</code>), and paste it

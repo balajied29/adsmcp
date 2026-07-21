@@ -44,7 +44,7 @@ export default async function AccountsPage({
         <div>
           <h1 className="text-xl font-semibold">Ad accounts</h1>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Connected Meta identities and the accounts AdPilot can see.
+            Connected Meta identities and the accounts AP/S can see.
           </p>
         </div>
         <a
@@ -69,7 +69,7 @@ export default async function AccountsPage({
       {!connections?.length ? (
         <p className="mt-8 rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">
           No Meta account connected yet. Click <strong>Connect Meta</strong> to authorize
-          AdPilot to read and manage your ad accounts.
+          AP/S to read and manage your ad accounts.
         </p>
       ) : (
         <>

@@ -31,7 +31,7 @@ function digestHtml(accountName: string, audit: AuditResult, appUrl: string): st
     .join("");
 
   return `<div style="font-family:-apple-system,Segoe UI,sans-serif;max-width:560px;margin:0 auto;padding:24px">
-  <p style="font-size:13px;color:#a1a1aa;margin:0">AdPilot daily audit</p>
+  <p style="font-size:13px;color:#a1a1aa;margin:0">AP/S daily audit</p>
   <h1 style="font-size:20px;color:#18181b;margin:4px 0 2px">${esc(accountName)}</h1>
   <p style="font-size:14px;color:#52525b;margin:0 0 16px">Health score: <strong>${audit.score}/100</strong></p>
   <p style="font-size:14px;color:#3f3f46;line-height:1.6">${esc(audit.summary)}</p>
@@ -47,7 +47,7 @@ export async function sendDigestEmail(
   audit: AuditResult,
 ): Promise<void> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const from = process.env.DIGEST_FROM_EMAIL ?? "AdPilot <digest@resend.dev>";
+  const from = process.env.DIGEST_FROM_EMAIL ?? "AP/S <digest@resend.dev>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -58,7 +58,7 @@ export async function sendDigestEmail(
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `AdPilot audit — ${accountName}: ${audit.score}/100, ${audit.recommendations.length} recommendation(s)`,
+      subject: `AP/S audit — ${accountName}: ${audit.score}/100, ${audit.recommendations.length} recommendation(s)`,
       html: digestHtml(accountName, audit, appUrl),
     }),
   });

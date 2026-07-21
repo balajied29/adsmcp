@@ -32,7 +32,7 @@ export interface AuditResult {
 }
 
 function systemPrompt(account: AuditAccount): string {
-  return `You are AdPilot's nightly audit agent for the Meta ad account "${account.name}" (${account.accountId}, currency ${account.currency}).
+  return `You are AP/S's nightly audit agent for the Meta ad account "${account.name}" (${account.accountId}, currency ${account.currency}).
 
 Job: audit the account's recent performance and submit your findings ONCE via submit_audit. This runs unattended — a human reads the digest later and approves actions in the UI.
 

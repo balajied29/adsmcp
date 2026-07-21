@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { LogoGlyphA } from "@/app/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -92,10 +93,12 @@ export default async function LandingPage() {
       <nav className="sticky top-0 z-20 border-b border-zinc-200/70 bg-[#FAFAF9]/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-sm font-bold text-white">
-              A
+            <span className="flex h-7 w-7 flex-none items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-white">
+              <LogoGlyphA className="h-3.5 w-3.5" />
             </span>
-            AdPilot
+            <span>
+              AP<span className="text-zinc-400">/</span>S
+            </span>
           </Link>
           <div className="flex items-center gap-3 text-sm">
             <a href="#deploy" className="hidden text-zinc-600 hover:text-zinc-900 sm:block">
@@ -202,7 +205,7 @@ export default async function LandingPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
                 <span className="ml-3 rounded-md bg-zinc-100 px-3 py-1 text-xs text-zinc-400">
-                  adpilot.app/dashboard
+                  aps.app/dashboard
                 </span>
               </div>
               <div className="grid gap-4 p-6 text-left sm:grid-cols-[1fr_260px]">
@@ -433,7 +436,7 @@ export default async function LandingPage() {
             <span className="text-gradient">minus the headache.</span>
           </h2>
           <p className="mt-4 leading-7 text-zinc-600">
-            Bad tracking quietly ruins good campaigns. AdPilot watches your pixel&apos;s
+            Bad tracking quietly ruins good campaigns. AP/S watches your pixel&apos;s
             pulse, hands you the exact install snippet, and verifies your server-side
             Conversions API pipe with live test events.
           </p>
@@ -504,7 +507,7 @@ export default async function LandingPage() {
               ["⚖️", "Budget reallocation", "Winners get more, losers get less — proposed with the math shown, capped by your rules."],
               ["🚨", "Anomaly alerts", "Spend spikes, delivery drops, and disapproved ads surface in your inbox, not next week's report."],
               ["🛎️", "Approval queue", "Every action waits for your click. Full autopilot is a setting you graduate into, not a default."],
-              ["📜", "Audit log", "Every change AdPilot ever makes is recorded — who approved it, what changed, and what happened."],
+              ["📜", "Audit log", "Every change AP/S ever makes is recorded — who approved it, what changed, and what happened."],
             ].map(([icon, title, body]) => (
               <div
                 key={title}
@@ -538,7 +541,7 @@ export default async function LandingPage() {
                 <span className="text-gradient">not promises.</span>
               </h2>
               <p className="mt-4 text-zinc-400">
-                An AI touching your ad budget needs hard limits. AdPilot&apos;s safety
+                An AI touching your ad budget needs hard limits. AP/S&apos;s safety
                 rules are enforced in software the AI cannot override.
               </p>
             </div>
@@ -590,7 +593,7 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-zinc-200">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8 text-sm text-zinc-500">
-          <span>© {new Date().getFullYear()} AdPilot</span>
+          <span>© {new Date().getFullYear()} AP/S</span>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-zinc-800">
               Privacy

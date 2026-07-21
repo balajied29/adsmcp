@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import { LogoWordmark } from "@/app/logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,8 +34,8 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold">AdPilot</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <LogoWordmark className="h-9 w-auto text-zinc-900" />
+        <p className="mt-3 text-sm text-zinc-500">
           Sign in with a magic link — no password needed.
         </p>
 

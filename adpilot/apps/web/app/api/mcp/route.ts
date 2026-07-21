@@ -4,8 +4,8 @@ import { resolveMcpKey, type McpContext } from "@/lib/mcp-auth";
 /**
  * Hosted MCP connector (Streamable HTTP, stateless JSON responses).
  * Register in Claude Code:
- *   claude mcp add adpilot --transport http {APP_URL}/api/mcp \
- *     --header "Authorization: Bearer adp_..."
+ *   claude mcp add aps --transport http {APP_URL}/api/mcp \
+ *     --header "Authorization: Bearer aps_..."
  * Reads are unrestricted; writes go through the same guardrails as the UI
  * (5x budget rule with confirm_large_change escape hatch).
  */
@@ -22,7 +22,7 @@ const PROTOCOL_VERSION = "2025-03-26";
 const TOOLS = [
   {
     name: "list_ad_accounts",
-    description: "List the Meta ad accounts connected to this AdPilot workspace.",
+    description: "List the Meta ad accounts connected to this AP/S workspace.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
         return reply({
           protocolVersion: PROTOCOL_VERSION,
           capabilities: { tools: {} },
-          serverInfo: { name: "adpilot", version: "1.0.0" },
+          serverInfo: { name: "aps", version: "1.0.0" },
         });
       case "ping":
         return reply({});

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AgentBlock, ChatMessage } from "./chat-types";
 import { AuditCard, CampaignCard, RichText } from "./cards";
+import { LogoGlyphA } from "@/app/logo";
 
 const SUGGESTIONS = [
   "Audit my account",
@@ -13,8 +14,8 @@ const SUGGESTIONS = [
 
 function AgentAvatar() {
   return (
-    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-zinc-900 text-[11px] font-bold text-white">
-      A
+    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-zinc-900 text-white">
+      <LogoGlyphA className="h-3.5 w-3.5" />
     </span>
   );
 }
@@ -100,8 +101,8 @@ export function ChatUI({ greetingName }: { greetingName: string }) {
         <div className="mx-auto w-full max-w-3xl px-6 py-8">
           {empty ? (
             <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 text-lg font-bold text-white">
-                A
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 text-white">
+                <LogoGlyphA className="h-6 w-6" />
               </span>
               <h1 className="mt-5 text-2xl font-semibold tracking-tight">
                 {greetingName}, what should we do with your ads today?
@@ -136,7 +137,7 @@ export function ChatUI({ greetingName }: { greetingName: string }) {
                   <div key={i}>
                     <div className="flex items-center gap-2.5">
                       <AgentAvatar />
-                      <span className="text-sm font-semibold">AdPilot agent</span>
+                      <span className="text-sm font-semibold">AP/S agent</span>
                     </div>
                     <div className="mt-3 pl-[38px]">
                       <Blocks blocks={m.blocks} />
@@ -148,7 +149,7 @@ export function ChatUI({ greetingName }: { greetingName: string }) {
                 <div>
                   <div className="flex items-center gap-2.5">
                     <AgentAvatar />
-                    <span className="text-sm font-semibold">AdPilot agent</span>
+                    <span className="text-sm font-semibold">AP/S agent</span>
                   </div>
                   <div className="mt-3 flex gap-1.5 pl-[38px]">
                     {[0, 150, 300].map((d) => (
@@ -179,7 +180,7 @@ export function ChatUI({ greetingName }: { greetingName: string }) {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask AdPilot anything about your ads…"
+            placeholder="Ask AP/S anything about your ads…"
             className="flex-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-zinc-400"
           />
           <button
