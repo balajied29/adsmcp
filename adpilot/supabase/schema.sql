@@ -4,6 +4,14 @@
 -- key is required to read them (no RLS select on the raw token column path —
 -- token access goes through the service client only).
 
+-- ============ updated_at trigger fn (defined early — used by several tables) ============
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end $$;
+
 -- ============ meta_connections ============
 -- One row per connected Meta identity (a user OAuth grant).
 create table if not exists public.meta_connections (
@@ -164,14 +172,225 @@ create policy "own relays: delete" on public.capi_relays
   for delete using (auth.uid() = workspace_id);
 -- Inserts via the service role (relay-creation route).
 
--- ============ updated_at trigger ============
-create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end $$;
+-- ============ WhatsApp Cloud module ============
+-- Each workspace connects its own WABA (Tech Provider model). All WA tables
+-- key off wa_connection_id and are RLS-scoped to the owning workspace, same
+-- pattern as the ads tables above.
 
+-- ============ wa_connections ============
+create table if not exists public.wa_connections (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  waba_id text not null,
+  phone_number_id text not null,
+  display_phone_number text,
+  verified_name text,
+  -- AES-256-GCM ciphertext (base64: iv.ciphertext.tag), never plaintext
+  encrypted_token text not null,
+  quality_rating text,               -- GREEN | YELLOW | RED, webhook-driven
+  messaging_tier text,                -- e.g. TIER_250, TIER_1K, ... cached from the API
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (workspace_id, phone_number_id)
+);
+
+alter table public.wa_connections enable row level security;
+
+create policy "own wa connections: select" on public.wa_connections
+  for select using (auth.uid() = workspace_id);
+create policy "own wa connections: delete" on public.wa_connections
+  for delete using (auth.uid() = workspace_id);
+-- Inserts/updates via the service role (connect flow + webhook quality updates).
+
+drop trigger if exists wa_connections_updated_at on public.wa_connections;
+create trigger wa_connections_updated_at
+  before update on public.wa_connections
+  for each row execute function public.set_updated_at();
+
+-- ============ wa_templates ============
+-- Mirror of Meta-side templates; status is webhook-driven, never polled.
+create table if not exists public.wa_templates (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  wa_connection_id uuid not null references public.wa_connections (id) on delete cascade,
+  meta_template_id text,
+  name text not null,
+  language text not null default 'en_US',
+  category text not null check (category in ('MARKETING', 'UTILITY', 'AUTHENTICATION')),
+  status text not null default 'PENDING' check (status in (
+    'PENDING', 'APPROVED', 'REJECTED', 'PAUSED', 'DISABLED'
+  )),
+  -- Body text, variable placeholders, header/footer/button spec — Meta's shape.
+  components jsonb not null default '[]',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (wa_connection_id, name, language)
+);
+
+alter table public.wa_templates enable row level security;
+
+create policy "own wa templates: select" on public.wa_templates
+  for select using (auth.uid() = workspace_id);
+
+drop trigger if exists wa_templates_updated_at on public.wa_templates;
+create trigger wa_templates_updated_at
+  before update on public.wa_templates
+  for each row execute function public.set_updated_at();
+
+-- ============ wa_contacts ============
+create table if not exists public.wa_contacts (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  phone_e164 text not null,
+  display_name text,
+  tags text[] not null default '{}',
+  opt_in_source text not null,        -- e.g. 'manual', 'csv_import', 'inbound_message', 'ctwa_ad'
+  opted_out boolean not null default false,
+  opted_out_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (workspace_id, phone_e164)
+);
+
+alter table public.wa_contacts enable row level security;
+
+create policy "own wa contacts: all" on public.wa_contacts
+  for all using (auth.uid() = workspace_id) with check (auth.uid() = workspace_id);
+
+-- ============ wa_audiences / wa_audience_members ============
+create table if not exists public.wa_audiences (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.wa_audiences enable row level security;
+
+create policy "own wa audiences: all" on public.wa_audiences
+  for all using (auth.uid() = workspace_id) with check (auth.uid() = workspace_id);
+
+create table if not exists public.wa_audience_members (
+  audience_id uuid not null references public.wa_audiences (id) on delete cascade,
+  contact_id uuid not null references public.wa_contacts (id) on delete cascade,
+  primary key (audience_id, contact_id)
+);
+
+alter table public.wa_audience_members enable row level security;
+
+create policy "own wa audience members: all" on public.wa_audience_members
+  for all using (
+    exists (
+      select 1 from public.wa_audiences a
+      where a.id = audience_id and a.workspace_id = auth.uid()
+    )
+  );
+
+-- ============ wa_broadcasts ============
+create table if not exists public.wa_broadcasts (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  wa_connection_id uuid not null references public.wa_connections (id) on delete cascade,
+  wa_template_id uuid not null references public.wa_templates (id),
+  audience_id uuid references public.wa_audiences (id),
+  name text not null,
+  -- Per-variable mapping (e.g. {"1": "{{contact.display_name}}"}) rendered at enqueue.
+  variable_spec jsonb not null default '{}',
+  status text not null default 'draft' check (status in (
+    'draft', 'approved', 'sending', 'paused', 'cancelled', 'sent', 'failed'
+  )),
+  recipient_count int not null default 0,
+  sent_count int not null default 0,
+  delivered_count int not null default 0,
+  failed_count int not null default 0,
+  scheduled_at timestamptz,
+  created_at timestamptz not null default now(),
+  approved_at timestamptz
+);
+
+alter table public.wa_broadcasts enable row level security;
+
+create policy "own wa broadcasts: select" on public.wa_broadcasts
+  for select using (auth.uid() = workspace_id);
+create policy "own wa broadcasts: update status" on public.wa_broadcasts
+  for update using (auth.uid() = workspace_id);
+-- Inserts via the service role (wa-execute enforces guardrails on create).
+
+-- ============ wa_outbound_queue ============
+create table if not exists public.wa_outbound_queue (
+  id uuid primary key default gen_random_uuid(),
+  broadcast_id uuid not null references public.wa_broadcasts (id) on delete cascade,
+  contact_id uuid not null references public.wa_contacts (id),
+  -- Deterministic idempotency key: broadcast_id:contact_id — restarts can't double-send.
+  idempotency_key text not null unique,
+  rendered_variables jsonb not null default '{}',
+  status text not null default 'queued' check (status in (
+    'queued', 'claimed', 'sent', 'delivered', 'read', 'failed'
+  )),
+  wamid text,
+  error_code text,
+  attempts int not null default 0,
+  claimed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table public.wa_outbound_queue enable row level security;
+
+create policy "own wa queue: select via broadcast" on public.wa_outbound_queue
+  for select using (
+    exists (
+      select 1 from public.wa_broadcasts b
+      where b.id = broadcast_id and b.workspace_id = auth.uid()
+    )
+  );
+-- Insert/claim/update happen via the service role (dispatcher).
+
+create index if not exists wa_outbound_queue_dispatch_idx
+  on public.wa_outbound_queue (broadcast_id, status)
+  where status = 'queued';
+
+-- ============ wa_send_log ============
+-- Immutable audit trail of every send attempt.
+create table if not exists public.wa_send_log (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  broadcast_id uuid references public.wa_broadcasts (id) on delete set null,
+  contact_id uuid references public.wa_contacts (id) on delete set null,
+  wamid text,
+  event text not null check (event in (
+    'send_attempt', 'sent', 'delivered', 'read', 'failed'
+  )),
+  error_code text,
+  error_message text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.wa_send_log enable row level security;
+
+create policy "own wa send log: select" on public.wa_send_log
+  for select using (auth.uid() = workspace_id);
+-- No update/delete policies: append-only, written by the service role.
+
+-- ============ wa_inbound ============
+create table if not exists public.wa_inbound (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references auth.users (id) on delete cascade,
+  wa_connection_id uuid not null references public.wa_connections (id) on delete cascade,
+  contact_phone_e164 text not null,
+  wamid text,
+  message_type text not null default 'text',
+  body text,
+  -- Click-to-WhatsApp ad referral payload, when present: {source_id, headline, ...}
+  referral jsonb,
+  received_at timestamptz not null default now()
+);
+
+alter table public.wa_inbound enable row level security;
+
+create policy "own wa inbound: select" on public.wa_inbound
+  for select using (auth.uid() = workspace_id);
+-- Inserts via the service role (webhook handler).
+
+-- ============ apply the trigger to tables with updated_at ============
 drop trigger if exists meta_connections_updated_at on public.meta_connections;
 create trigger meta_connections_updated_at
   before update on public.meta_connections

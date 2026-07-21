@@ -14,7 +14,7 @@ interface Connector {
   disconnectAction?: string;
 }
 
-function connectors(metaConnected: boolean): Connector[] {
+function connectors(metaConnected: boolean, waConnected: boolean): Connector[] {
   return [
     {
       name: "Meta Ads",
@@ -22,6 +22,12 @@ function connectors(metaConnected: boolean): Connector[] {
       status: metaConnected ? "connected" : "available",
       connectHref: "/api/meta/oauth/start",
       disconnectAction: "/api/meta/disconnect",
+    },
+    {
+      name: waConnected ? "WhatsApp (connected)" : "WhatsApp",
+      tile: { bg: "bg-emerald-600", fg: "text-white", label: "◐" },
+      status: "available",
+      connectHref: "/dashboard/whatsapp",
     },
     { name: "Google Ads", tile: { bg: "bg-white border border-zinc-200", fg: "text-blue-600", label: "G" }, status: "soon" },
     { name: "Google Analytics", tile: { bg: "bg-amber-500", fg: "text-white", label: "GA" }, status: "soon" },
@@ -373,9 +379,11 @@ function McpKeysCard({ initialKeys }: { initialKeys: McpKeyRow[] }) {
 
 export function IntegrationsUI({
   metaConnected,
+  waConnected,
   mcpKeys,
 }: {
   metaConnected: boolean;
+  waConnected: boolean;
   mcpKeys: McpKeyRow[];
 }) {
   return (
@@ -388,7 +396,7 @@ export function IntegrationsUI({
       </header>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {connectors(metaConnected).map((c) => (
+        {connectors(metaConnected, waConnected).map((c) => (
           <ConnectorCard key={c.name} c={c} />
         ))}
       </div>

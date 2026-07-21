@@ -7,10 +7,12 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "audit": "tsx src/index.ts"
+    "audit": "tsx src/index.ts",
+    "wa-dispatch": "tsx src/wa-dispatcher.ts"
   },
   "dependencies": {
     "@adpilot/meta-client": "*",
+    "@adpilot/wa-client": "*",
     "@supabase/supabase-js": "^2.48.0",
     "dotenv": "^16.4.5",
     "@anthropic-ai/sdk": "^0.112.1",

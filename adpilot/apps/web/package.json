@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "vercel-build": "(cd ../.. && npm run build -w packages/meta-client) && next build"
+    "vercel-build": "(cd ../.. && npm run build -w packages/meta-client && npm run build -w packages/wa-client) && next build"
   },
   "dependencies": {
     "@adpilot/meta-client": "*",
+    "@adpilot/wa-client": "*",
     "@anthropic-ai/sdk": "^0.112.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.48.0",

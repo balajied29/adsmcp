@@ -86,6 +86,9 @@ export function Sidebar({ dev, email }: { dev: boolean; email: string }) {
         <NavItem href="#autopilot" label="Marketing autopilot" soon />
         <NavItem href="#saved" label="Saved ads" soon />
 
+        <SectionLabel>WhatsApp</SectionLabel>
+        <NavItem href="/dashboard/whatsapp" label="Connections" />
+
         <SectionLabel>Workspace</SectionLabel>
         <NavItem href="/dashboard/integrations" label="Integrations" />
         <NavItem href="/dashboard/billing" label="Billing" />

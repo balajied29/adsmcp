@@ -1,0 +1,46 @@
+# WhatsApp broadcast dispatcher — drains queued sends for every broadcast in
+# "sending" status. Enable: repo Settings → Secrets and variables → Actions →
+#   Variables: WA_DISPATCHER_ENABLED = true
+#   Secrets:   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TOKEN_ENCRYPTION_KEY
+#
+# GitHub Actions' minimum cron interval is 5 minutes and firing is best-effort
+# (often slower under load) — coarser than the 1-minute target in
+# docs/TECHNICAL.md. Fine for beta volume; see that doc's dispatcher-scheduling
+# research item before relying on this for time-sensitive sends at scale.
+name: WhatsApp broadcast dispatcher
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    if: ${{ vars.WA_DISPATCHER_ENABLED == 'true' }}
+    defaults:
+      run:
+        working-directory: adpilot
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: adpilot/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: |
+          npm run build -w packages/wa-client
+          npm run build -w apps/worker
+
+      - name: Run dispatcher
+        run: node apps/worker/dist/wa-dispatcher.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}

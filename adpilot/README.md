@@ -8,18 +8,21 @@ AI media buyer SaaS for Meta ads — customers connect their ad accounts via OAu
 
 ```
 packages/meta-client/   Typed Meta Marketing API client (Graph v25.0) + OAuth helpers
-apps/web/               Next.js 16 app: auth, Meta OAuth connect, dashboard
-apps/worker/            Daily audit agent (Milestone 2 — stub)
-supabase/schema.sql     Postgres schema with RLS: connections, accounts,
-                        recommendations, action_log
+packages/wa-client/     Typed WhatsApp Cloud API client (templates, sends, embedded signup)
+apps/web/               Next.js 16 app: auth, Meta OAuth connect, chat dashboard,
+                        launcher, approvals, WhatsApp module, MCP connector
+apps/worker/            Daily audit agent + WhatsApp broadcast dispatcher
+supabase/schema.sql     Postgres schema with RLS (16 tables — ads + WhatsApp)
 ```
 
 ## Milestone status
 
 - [x] **M1 — Foundation:** signup/login (magic link), Connect Meta OAuth flow, encrypted token storage, dashboard with campaigns + 7-day insights
-- [ ] **M2 — Audit agent:** daily worker run per tenant → recommendations + email digest
-- [ ] **M3 — Approve & execute:** approval queue, guarded writes, action log
-- [ ] **M4 — App Review, creative generation, billing**
+- [x] **M2 — Live agent:** Claude agent behind chat, daily audit worker → recommendations + email digest
+- [x] **M3 — Approve & execute:** approval queue, guarded writes, action log
+- [x] **M4 — Platform:** hosted MCP connector, Shopify CAPI relay, Stripe billing scaffold, WhatsApp module (templates, audiences, broadcasts, inbox) — App Review submission is the remaining external step (`APP_REVIEW.md`)
+
+See `docs/TECHNICAL.md` (repo root) for the full architecture, security model, and open research items.
 
 ## Setup
 

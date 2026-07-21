@@ -7,10 +7,12 @@ export const dynamic = "force-dynamic";
 
 export default async function IntegrationsPage() {
   let metaConnected = false;
+  let waConnected = false;
   let mcpKeys: { id: string; label: string; created_at: string; last_used_at: string | null }[] = [];
 
   if (devMode()) {
     metaConnected = true;
+    waConnected = true;
     mcpKeys = [
       {
         id: "dev-key",
@@ -31,6 +33,11 @@ export default async function IntegrationsPage() {
       .select("id", { count: "exact", head: true });
     metaConnected = (count ?? 0) > 0;
 
+    const { count: waCount } = await supabase
+      .from("wa_connections")
+      .select("id", { count: "exact", head: true });
+    waConnected = (waCount ?? 0) > 0;
+
     const { data: keys } = await supabase
       .from("mcp_keys")
       .select("id, label, created_at, last_used_at")
@@ -38,5 +45,5 @@ export default async function IntegrationsPage() {
     mcpKeys = keys ?? [];
   }
 
-  return <IntegrationsUI metaConnected={metaConnected} mcpKeys={mcpKeys} />;
+  return <IntegrationsUI metaConnected={metaConnected} waConnected={waConnected} mcpKeys={mcpKeys} />;
 }

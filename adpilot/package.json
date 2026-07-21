@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w packages/meta-client && npm run build -w apps/worker && npm run build -w apps/web",
+    "build": "npm run build -w packages/meta-client && npm run build -w packages/wa-client && npm run build -w apps/worker && npm run build -w apps/web",
     "dev:web": "npm run dev -w apps/web",
     "dev:worker": "npm run dev -w apps/worker"
   },
